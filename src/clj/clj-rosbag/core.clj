@@ -1,0 +1,2 @@
+(ns clj-rosbag.core)
+
