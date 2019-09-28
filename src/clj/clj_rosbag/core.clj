@@ -1,5 +1,4 @@
 (ns clj-rosbag.core
-  (:require [clojure.java.data :refer [from-java]])
   (:import [com.github.swrirobotics.bags.reader BagFile]
            [com.github.swrirobotics.bags.reader.messages.serialization BagMessage MessageType ArrayType]))
 
