@@ -1,6 +1,6 @@
 (ns clj-rosbag.core
   (:import [com.github.swrirobotics.bags.reader BagFile]
-           [com.github.swrirobotics.bags.reader.messages.serialization BagMessage MessageType ArrayType]))
+           [com.github.swrirobotics.bags.reader.messages.serialization MessageType ArrayType]))
 
 (defrecord RosMessage [topic message time])
 
@@ -43,7 +43,7 @@
 
 (defn from-bag-msg
   ([msg] (->RosMessage (.getTopic msg)
-                       (.getMessage msg)
+                       (msg-type->map (.getMessage msg))
                        (.getTimestamp msg))))
 
 (defn open
@@ -65,10 +65,4 @@
     (def file (File. "resources/planar_lidar.bag"))
     (def bag (open (.getPath file)))
     (def msgs (read-messages bag))
-    (def msg (:message (first msgs)))
-    (def field-names (.getFieldNames msg))
-    (def angle-increment (.getField msg "angle_increment"))
-    (def angle-increment-type (.getType angle-increment))
-    (def ranges (.getField msg "ranges"))
-    (def ranges-type (.getType ranges))
-    (msg-type->map msg)))
+    (def msg (:message (first msgs)))))

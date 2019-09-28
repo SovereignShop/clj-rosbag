@@ -13,14 +13,7 @@
                                     (fn [msg]
                                        (put! ch msg))))))
 
-(defn read-messages
-  "Asyncronously reads messages into a channel."
-  ([bag] (read-messages (chan)))
-  ([bag ch compression]
-   (read-bag ch bag)
-   ch))
-
-(defn open-bag
+(defn open
   [bag-str]
   (let [size (.-length bag-str)
         char-codes (js/Array. size)
@@ -29,3 +22,10 @@
         byte-array (js/Uint8Array. char-codes)
         blob (js/Blob. #js[byte-array])]
     (Rosbag/open blob)))
+
+(defn read-messages
+  "Asyncronously reads messages into a channel."
+  ([bag] (read-messages (chan)))
+  ([bag ch compression]
+   (read-bag ch bag)
+   ch))
