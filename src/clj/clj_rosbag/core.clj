@@ -25,7 +25,8 @@
     "float32[]"  (.getAsFloats field)
     "float64[]"  (.getAsDoubles field)
     "time[]"     (.getAsTimestamps field)
-    "duration[]" (.getAsDurations field)))
+    "duration[]" (.getAsDurations field)
+    (mapv parse-field (.getFields field))))
 
 (defmethod parse-field MessageType
   [field]
@@ -65,4 +66,5 @@
     (def file (File. "resources/planar_lidar.bag"))
     (def bag (open (.getPath file)))
     (def msgs (read-messages bag))
+    (-> msgs first :message :angle_min)
     (def msg (:message (first msgs)))))
