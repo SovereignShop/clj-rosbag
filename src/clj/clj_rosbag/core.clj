@@ -1,6 +1,6 @@
 (ns clj-rosbag.core
-  (:import [com.github.swrirobotics.bags.reader BagFile]
-           [com.github.swrirobotics.bags.reader.messages.serialization MessageType ArrayType]))
+  (:import [com.github.swrirobotics.bags.reader BagFile TopicInfo]
+           [com.github.swrirobotics.bags.reader.messages.serialization BagMessage MessageType ArrayType]))
 
 (defrecord RosMessage [topic message time])
 
@@ -11,7 +11,7 @@
 (defmethod parse-field :default [field] (.getValue field))
 
 (defmethod parse-field ArrayType
-  [field]
+  [^ArrayType field]
   (case (.getType field)
     "int8[]"     (.getAsBytes field)
     "char[]"     (.getAsShorts field)
@@ -33,19 +33,18 @@
   (msg-type->map field))
 
 (defn msg-type->map
-  ([msg-type]
+  ([^MessageType msg-type]
    (persistent!
     (reduce (fn [ret field-name]
-              (let [field (.getField msg-type field-name)
-                    field-type (.getType field)]
+              (let [field (.getField msg-type field-name)]
                 (assoc! ret (keyword field-name) (parse-field field))))
             (transient {})
             (.getFieldNames msg-type)))))
 
 (defn from-bag-msg
-  ([msg] (->RosMessage (.getTopic msg)
-                       (msg-type->map (.getMessage msg))
-                       (.getTimestamp msg))))
+  ([^BagMessage msg] (->RosMessage (.getTopic msg)
+                                   (msg-type->map (.getMessage msg))
+                                   (.getTimestamp msg))))
 
 (defn open
   "Open a bag. Can be a string representing a path to a bag file, or
@@ -56,15 +55,15 @@
 (defn read-messages
   "Read messages from bag."
   ([^BagFile bag]
-   (read-messages bag (map #(.getName %) (.getTopics bag))))
+   (read-messages bag (map (fn [^TopicInfo topics] (.getName topics)) (.getTopics bag))))
   ([^BagFile bag topics]
    (map from-bag-msg (iterator-seq (.iterMessagesOnTopics bag (java.util.ArrayList. topics))))))
 
 (comment
   (do
-    (import '[java.io File])
+    (import '[java.io File]) 
     (def file (File. "resources/planar_lidar.bag"))
-    (def bag (open (.getPath file)))
+    (def bag (open  (type (.getPath file))))
     (def msgs (read-messages bag))
     (-> msgs first :message :angle_min)
     (def msg (:message (first msgs)))))
