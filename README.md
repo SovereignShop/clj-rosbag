@@ -11,6 +11,7 @@ Clojurescript API is not quite working yet.
 (import '[java.io File])
 (require '[clj-rosbag.core :as rosbag])
 (def bag-file (File. "resources/Float32.bag"))
+;; Note, open can take a path to a bag file, or a byte array.
 (def bag (rosbag/open (.getPath bag-file)))
 
 ;; Returns a lazy sequence of messages on topic "/data".
