@@ -8,8 +8,8 @@
 (defn- lz4-decompress [^js/Uint8Array buffer]
   (Buffer/Buffer. (lz4/decompress buffer)))
 
-(defn- read-bag [ch bag]
-  (.then bag (fn [b] (.readMessages b #js {:decompress #js {:lz4 lz4-decompress}}
+(defn- read-bag [ch decompressor bag]
+  (.then bag (fn [b] (.readMessages b #js {:decompress #js {:lz4 decompressor}}
                                     (fn [msg]
                                        (put! ch msg))))))
 
@@ -25,7 +25,7 @@
 
 (defn read-messages
   "Asyncronously reads messages into a channel."
-  ([bag] (read-messages (chan)))
-  ([bag ch compression]
-   (read-bag ch bag)
+  ([bag] (read-messages (chan) lz4-decompress))
+  ([bag ch decompressor]
+   (read-bag ch decompressor bag)
    ch))
