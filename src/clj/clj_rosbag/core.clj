@@ -2,7 +2,7 @@
   (:import [com.github.swrirobotics.bags.reader BagFile TopicInfo]
            [com.github.swrirobotics.bags.reader.messages.serialization BagMessage MessageType ArrayType]))
 
-(defrecord RosMessage [topic message time])
+(defrecord RosMessage [^String topic ^MessageType message ^java.sql.Timestamp time])
 
 (declare msg-type->map)
 
@@ -42,9 +42,10 @@
             (.getFieldNames msg-type)))))
 
 (defn from-bag-msg
-  ([^BagMessage msg] (->RosMessage (.getTopic msg)
-                                   (msg-type->map (.getMessage msg))
-                                   (.getTimestamp msg))))
+  ([^BagMessage msg]
+   (->RosMessage (.getTopic msg)
+                 (msg-type->map (.getMessage msg))
+                 (.getTimestamp msg))))
 
 (defn open
   "Open a bag. Can be a string representing a path to a bag file, or
@@ -61,7 +62,7 @@
 
 (comment
   (do
-    (import '[java.io File]) 
+    (import '[java.io File])
     (def file (File. "resources/planar_lidar.bag"))
     (def bag (open  (type (.getPath file))))
     (def msgs (read-messages bag))
