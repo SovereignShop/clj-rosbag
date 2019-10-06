@@ -13,4 +13,8 @@ read into clojure data structures. Note that primitive array types are read as t
 
 ;; Returns a lazy sequence of messages on topic "/data".
 (def messages (rosbag/read-messages bag ["/data"]))
+messages
+;; ({:topic "/data",
+;;   :message {:data 3.14159},
+;;   :time #inst "2017-08-30T05:00:39.005849329-00:00"})
 ```
