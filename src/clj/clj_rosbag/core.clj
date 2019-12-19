@@ -60,6 +60,9 @@
   ([^BagFile bag topics]
    (map from-bag-msg (iterator-seq (.iterMessagesOnTopics bag (java.util.ArrayList. topics))))))
 
+(defn rosbag? [x]
+  (instance? BagFile x))
+
 (comment
   (do
     (import '[java.io File])
