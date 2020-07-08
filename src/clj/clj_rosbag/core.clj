@@ -1,36 +1,65 @@
 (ns clj-rosbag.core
   (:import [com.github.swrirobotics.bags.reader BagFile TopicInfo]
-           [com.github.swrirobotics.bags.reader.messages.serialization BagMessage MessageType ArrayType]))
+           [java.sql Timestamp]
+           [com.github.swrirobotics.bags.reader.messages.serialization
+            UInt64Type UInt32Type UInt16Type UInt8Type Float32Type Float64Type StringType
+            Int8Type Int16Type Int32Type Int64Type TimeType DurationType BoolType BagMessage MessageType ArrayType]))
 
-(defrecord RosMessage [^String topic ^MessageType message ^java.sql.Timestamp time])
+(defrecord RosMessage [^String topic ^MessageType message ^Timestamp time])
+
+(defprotocol RosMessageField
+  (parse-field [field]))
 
 (declare msg-type->map)
 
-(defmulti parse-field class)
-
-(defmethod parse-field :default [field] (.getValue field))
-
-(defmethod parse-field ArrayType
-  [^ArrayType field]
-  (case (.getType field)
-    "int8[]"     (.getAsBytes field)
-    "char[]"     (.getAsShorts field)
-    "uint8[]"    (.getAsShorts field)
-    "int16[]"    (.getAsShorts field)
-    "uint16[]"   (.getAsInts field)
-    "int32[]"    (.getAsInts field)
-    "uint32[]"   (.getAsLongs field)
-    "int64[]"    (.getAsLongs field)
-    "uint64[]"   (.getAsBigIntegers field)
-    "float32[]"  (.getAsFloats field)
-    "float64[]"  (.getAsDoubles field)
-    "time[]"     (.getAsTimestamps field)
-    "duration[]" (.getAsDurations field)
-    (mapv parse-field (.getFields field))))
-
-(defmethod parse-field MessageType
-  [field]
-  (msg-type->map field))
+(extend-protocol RosMessageField
+  UInt32Type
+  (^Long parse-field [this] (.getValue this))
+  UInt64Type
+  (^BigInteger parse-field [this] (.getValue this))
+  UInt16Type
+  (^Integer parse-field [this] (.getValue this))
+  UInt8Type
+  (^Short parse-field [this] (.getValue this))
+  Float32Type
+  (^Flaot parse-field [this] (.getValue this))
+  Float64Type
+  (^Double parse-field [this] (.getValue this))
+  StringType
+  (^Srtring parse-field [this] (.getValue this))
+  Int8Type
+  (^Byte parse-field [this] (.getValue this))
+  Int16Type
+  (^Short parse-field [this] (.getValue this))
+  Int32Type
+  (^Integer parse-field [this] (.getValue this))
+  Int64Type
+  (^Double parse-field [this] (.getValue this))
+  TimeType
+  (^Timestamp parse-field [this] (.getValue this))
+  DurationType
+  (^Double parse-field [this] (.getValue this))
+  BoolType
+  (^Boolean parse-field [this] (.getValue this))
+  MessageType
+  (parse-field [this] (msg-type->map this))
+  ArrayType
+  (parse-field [this]
+    (case (.getType this)
+      "int8[]"     (.getAsBytes this)
+      "char[]"     (.getAsShorts this)
+      "uint8[]"    (.getAsShorts this)
+      "int16[]"    (.getAsShorts this)
+      "uint16[]"   (.getAsInts this)
+      "int32[]"    (.getAsInts this)
+      "uint32[]"   (.getAsLongs this)
+      "int64[]"    (.getAsLongs this)
+      "uint64[]"   (.getAsBigIntegers this)
+      "float32[]"  (.getAsFloats this)
+      "float64[]"  (.getAsDoubles this)
+      "time[]"     (.getAsTimestamps this)
+      "duration[]" (.getAsDurations this)
+      (mapv parse-field (.getFields this)))))
 
 (defn msg-type->map
   ([^MessageType msg-type]
@@ -52,6 +81,18 @@
   a byte array of the contents of a bag file."
   [bag]
   (doto (BagFile. bag) (.read)))
+
+(defn get-info
+  [^BagFile bag]
+  {:compresion-type (.getCompressionType bag)
+   :message-count (.getMessageCount bag)
+   :is-indexed (.isIndexed bag)
+   :topic-info (vec (for [^TopicInfo topic (.getTopics bag)]
+                      {:name (.getName topic)
+                       :message-count (.getMessageCount topic)
+                       :message-type (.getMessageType topic)
+                       :md5sum (.getMessageMd5Sum topic)
+                       :connection-count (.getConnectionCount topic)}))})
 
 (defn read-messages
   "Read messages from bag."
