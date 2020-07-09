@@ -26,7 +26,7 @@
   Float64Type
   (^Double parse-field [this] (.getValue this))
   StringType
-  (^Srtring parse-field [this] (.getValue this))
+  (^String parse-field [this] (.getValue this))
   Int8Type
   (^Byte parse-field [this] (.getValue this))
   Int16Type
