@@ -1,9 +1,13 @@
 (ns clj-rosbag.core
   (:import [com.github.swrirobotics.bags.reader BagFile TopicInfo]
            [java.sql Timestamp]
+           [java.util ArrayList]
+           [clojure.lang PersistentVector]
            [com.github.swrirobotics.bags.reader.messages.serialization
             UInt64Type UInt32Type UInt16Type UInt8Type Float32Type Float64Type StringType
             Int8Type Int16Type Int32Type Int64Type TimeType DurationType BoolType BagMessage MessageType ArrayType]))
+
+;; (set! *warn-on-reflection* true)
 
 (defrecord RosMessage [^String topic ^MessageType message ^Timestamp time])
 
@@ -80,7 +84,9 @@
   "Open a bag. Can be a string representing a path to a bag file, or
   a byte array of the contents of a bag file."
   [bag]
-  (doto (BagFile. bag) (.read)))
+  (cond (string? bag) (doto (BagFile. ^String bag) (.read))
+        (bytes? bag) (doto (BagFile. ^bytes bag) (.read))
+        :else (throw (Exception. (str "Unknown bag type: " (type bag))))))
 
 (defn get-info
   [^BagFile bag]
@@ -97,9 +103,9 @@
 (defn read-messages
   "Read messages from bag."
   ([^BagFile bag]
-   (read-messages bag (map (fn [^TopicInfo topics] (.getName topics)) (.getTopics bag))))
-  ([^BagFile bag topics]
-   (map from-bag-msg (iterator-seq (.iterMessagesOnTopics bag (java.util.ArrayList. topics))))))
+   (read-messages bag (mapv (fn [^TopicInfo topics] (.getName topics)) (.getTopics bag))))
+  ([^BagFile bag ^PersistentVector topics]
+   (map from-bag-msg (iterator-seq (.iterMessagesOnTopics bag (ArrayList. topics))))))
 
 (defn rosbag? [x]
   (instance? BagFile x))
